@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172b4d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>得コン v0.8</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#f3f5f8;color:#182338;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
+header{background:#172b4d;color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:10}
+.logo{font-size:22px;font-weight:900} .sub{font-size:12px;opacity:.85;margin-top:3px}
+.wrap{max-width:680px;margin:auto;padding:14px 14px 90px}
+.search{background:#fff;border-radius:16px;padding:12px;box-shadow:0 3px 12px rgba(0,0,0,.06);display:flex;gap:8px;margin-bottom:12px}
+.search input{flex:1;border:2px solid #e6eaf0;border-radius:11px;padding:11px;font-size:16px;min-width:0}
+.search button{border:0;border-radius:11px;background:#172b4d;color:#fff;font-weight:800;padding:0 15px}
+.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:5px;margin-bottom:10px}
+.tabs button{white-space:nowrap;border:0;background:#fff;border-radius:999px;padding:9px 13px;font-weight:800;color:#3a465a}
+.tabs button.active{background:#172b4d;color:#fff}
+.chips{display:flex;gap:7px;overflow:auto;margin-bottom:14px}
+.chips button{white-space:nowrap;border:0;background:#e9edf3;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800}
+.chips button.active{background:#dce5f2}
+.status{font-size:13px;font-weight:800;margin:5px 2px 10px}
+.card{background:#fff;border-radius:17px;padding:15px;margin:10px 0;box-shadow:0 3px 12px rgba(0,0,0,.06);position:relative}
+.store{display:inline-block;color:#fff;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;margin-bottom:9px}
+.seven{background:#e51e3a} .family{background:#008c4d} .lawson{background:#0878d1}
+.title{font-size:16px;font-weight:900;line-height:1.4;padding-right:35px}
+.row{font-size:14px;margin-top:9px;line-height:1.45}
+.date{font-size:11px;color:#778194;margin-top:10px}
+.fav{position:absolute;right:12px;top:12px;border:0;background:#f2f4f7;width:36px;height:36px;border-radius:50%;font-size:19px}
+.fav.on{background:#fff0a8}
+.empty{text-align:center;padding:35px 15px;color:#717b8c;background:#fff;border-radius:16px}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid #e5e8ed;padding:8px max(10px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:20}
+nav button{border:0;background:transparent;font-size:11px;font-weight:800;color:#6d7685;padding:5px 16px}
+nav button.active{color:#172b4d}
+</style>
+</head>
+<body>
+<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.8</span></div><div class="sub">コンビニのお得を、もっと手軽に。</div></div></header>
+
+<main class="wrap">
+  <form class="search" id="searchForm">
+    <input id="searchInput" type="search" placeholder="商品名・店舗名・内容を検索" autocomplete="off">
+    <button type="submit">検索</button><button type="button" id="clearSearch" style="border:0;border-radius:11px;background:#e9edf3;color:#172b4d;font-weight:800;padding:0 12px">×</button>
+  </form>
+
+  <div class="tabs" id="storeTabs">
+    <button data-store="all" class="active">✨ 今日のお得</button>
+    <button data-store="seven">セブン</button>
+    <button data-store="family">ファミマ</button>
+    <button data-store="lawson">ローソン</button>
+  </div>
+
+  <div class="chips" id="chips">
+    <button data-cat="all" class="active">👑 すべて</button>
+    <button data-cat="無料でもらえる">🎁 無料でもらえる</button>
+    <button data-cat="値引き・割引">￥ 値引き・割引</button>
+    <button data-cat="クーポン">🎫 クーポン</button>
+    <button data-cat="アプリ限定">📱 アプリ限定</button>
+  </div>
+
+  <div class="status" id="status"></div><div id="searchHint" style="font-size:12px;color:#778194;margin:0 2px 10px">例：コーヒー / 無料 / セブン / コーヒー 無料</div>
+  <div id="list"></div>
+</main>
+
+<nav>
+  <button data-nav="home" class="active">⌂ ホーム</button>
+  <button data-nav="list">☰ 一覧</button>
+  <button data-nav="search">🔎 検索</button>
+  <button data-nav="favorite">♡ お気に入り</button>
+</nav>
+
+<script>
+const DEALS=[{"store": "seven", "storeName": "セブンイレブン", "buy": "Gong cha 黒糖烏龍ミルクティーなど", "get": "午後の紅茶 おいしい無糖など", "date": "購入：9/8〜9/14　引換：9/15〜9/28", "category": "無料でもらえる"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "まるしぼりりんご＆カルピス 470ml", "get": "ぐんぐんグルトα 快眠・快腸ケア 500ml", "date": "購入：9/8〜9/14", "category": "無料でもらえる"}, {"store": "family", "storeName": "ファミリーマート", "buy": "伊右衛門 濃い緑茶・濃いほうじ茶", "get": "サントリー天然水 1L", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる"}, {"store": "family", "storeName": "ファミリーマート", "buy": "アイスの実 濃密りんご", "get": "対象商品", "date": "9/8〜9/14", "category": "アプリ限定"}, {"store": "lawson", "storeName": "ローソン", "buy": "辛ラーメン トゥーンバカップ／焼きそばカップ／バケツカップ", "get": "辛ラーメン ミニカップ", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる"}, {"store": "lawson", "storeName": "ローソン", "buy": "明治 エッセル スーパーカップ クッキーバニラ 200ml", "get": "明治 ブルガリア フローズンヨーグルト デザート 85ml", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる"}];
+let store="all", cat="all", query="", favorites=JSON.parse(localStorage.getItem("tokkonFavorites")||"[]");
+
+const list=document.getElementById("list"), status=document.getElementById("status"), input=document.getElementById("searchInput");
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function normalizeText(s){
+  return String(s)
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[ァ-ン]/g, ch=>String.fromCharCode(ch.charCodeAt(0)-0x60))
+    .replace(/[ぁ-ゖ]/g, ch=>ch)
+    .replace(/とうきょう/g,"東京")
+    .replace(/せぶんいれぶん|せぶん/g,"セブン")
+    .replace(/ふぁみりーまーと|ふぁみま/g,"ファミマ")
+    .replace(/ろーそん/g,"ローソン")
+    .replace(/[^a-z0-9一-龠ぁ-ゖー]+/g,"");
+}
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  if(!m) return n; if(!n) return m;
+  let prev=Array(n+1).fill(0).map((_,i)=>i);
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    prev=cur;
+  }
+  return prev[n];
+}
+
+const SEARCH_GROUPS = {
+  "お茶":["お茶","茶","緑茶","日本茶","ほうじ茶","紅茶","烏龍茶","ウーロン茶","麦茶","ジャスミン茶","抹茶","濃茶","ティー"],
+  "炭酸":["炭酸","炭酸飲料","コーラ","サイダー","ソーダ","スパークリング","炭酸水","ジンジャーエール","ファンタ","メロンソーダ"],
+  "コーヒー":["コーヒー","珈琲","カフェラテ","カフェオレ","ラテ","エスプレッソ","ブラックコーヒー","ミルクコーヒー"],
+  "飲み物":["飲み物","飲料","ドリンク","お茶","炭酸","ジュース","コーヒー","紅茶","水","スポーツドリンク","エナジードリンク"],
+  "ジュース":["ジュース","果汁","フルーツ飲料","オレンジ","りんご","ぶどう","カルピス","乳酸菌飲料"],
+  "水":["水","天然水","ミネラルウォーター","水分補給"],
+  "アイス":["アイス","アイスクリーム","ラクトアイス","氷菓","フローズン","ジェラート","ソフトクリーム"],
+  "お菓子":["お菓子","菓子","チョコ","チョコレート","ポテトチップス","ポテチ","グミ","クッキー","ビスケット","スナック"],
+  "ラーメン":["ラーメン","カップ麺","カップラーメン","袋麺","インスタント麺","麺","焼きそば","うどん","そば"],
+  "パン":["パン","ベーカリー","菓子パン","惣菜パン","サンドイッチ","ロールパン"],
+  "おにぎり":["おにぎり","おむすび","おむすび類"],
+  "弁当":["弁当","お弁当","丼","丼ぶり","惣菜"],
+  "スイーツ":["スイーツ","デザート","ケーキ","プリン","ゼリー","シュークリーム","洋菓子","和菓子"],
+  "飲料":["飲料","飲み物","ドリンク","お茶","炭酸","ジュース","コーヒー","水"],
+  "無料":["無料","もらえる","1個もらえる","一個もらえる","プレゼント","おまけ","プライチ"],
+  "割引":["割引","値引き","安い","お得","値下げ","OFF","円引き","半額"],
+  "クーポン":["クーポン","券","値引券","アプリクーポン"],
+  "セブン":["セブン","セブンイレブン","7-11"],
+  "ファミマ":["ファミマ","ファミリーマート"],
+  "ローソン":["ローソン","LAWSON"]
+};
+const SEARCH_ALIASES = Object.fromEntries(
+  Object.entries(SEARCH_GROUPS).flatMap(([key, words]) => words.map(w => [normalizeText(w), words]))
+);
+function expandSearchWords(rawQuery){
+  const base = rawQuery.trim().split(/[\s　]+/).map(normalizeText).filter(Boolean);
+  const expanded = new Set(base);
+  for(const q of base){
+    for(const [key, words] of Object.entries(SEARCH_GROUPS)){
+      const nk = normalizeText(key);
+      const nw = words.map(normalizeText);
+      if(nk === q || nw.includes(q)){
+        nw.forEach(w=>expanded.add(w));
+      }
+    }
+  }
+  return [...expanded];
+}
+
+function matchesSmart(text, rawQuery){
+  const t=normalizeText(text);
+  const raw=rawQuery.trim();
+  if(!raw) return true;
+
+  const baseWords=raw.split(/[\s　]+/).map(normalizeText).filter(Boolean);
+  const queries=expandSearchWords(raw);
+
+  // カテゴリ検索：たとえば「お茶」なら関連するお茶全般を検索
+  if(baseWords.length===1){
+    if(queries.some(q=>t.includes(q))) return true;
+  } else {
+    // 複数語は各語がそれぞれ意味検索できるようにする
+    const groups=baseWords.map(q=>{
+      const related=expandSearchWords(q);
+      return related.some(w=>t.includes(w));
+    });
+    if(groups.every(Boolean)) return true;
+  }
+
+  // 元の文字列に対する少しの入力ミスも許容
+  if(t.includes(normalizeText(raw))) return true;
+  if(baseWords.length===1 && baseWords[0].length>=3){
+    const q=baseWords[0];
+    const chunks=t.match(/[a-z0-9一-龠ぁ-ゖー]{2,}/g)||[];
+    return chunks.some(c=>{
+      const max=Math.max(1,Math.floor(q.length*0.25));
+      return levenshtein(q,c)<=max || c.includes(q.slice(0,-1));
+    });
+  }
+  return false;
+}
+function render(){
+  const filtered=DEALS.filter(d=>{
+    const text=d.storeName+" "+d.buy+" "+d.get+" "+d.date+" "+d.category;
+    return (store==="all"||d.store===store)&&
+      (cat==="all"||d.category===cat)&&
+      (!query.trim()||matchesSmart(text,query));
+  });
+  status.textContent=q?`「${query}」の検索結果：${filtered.length}件`:`今日のお得：${filtered.length}件`;
+  list.innerHTML=filtered.length?filtered.map((d,i)=>{
+    const id=DEALS.indexOf(d), on=favorites.includes(id);
+    return `<article class="card">
+      <button class="fav ${on?"on":""}" onclick="toggleFav(${id})" aria-label="お気に入り">${on?"★":"☆"}</button>
+      <span class="store ${d.store}">${esc(d.storeName)}</span>
+      <div class="title">${esc(d.buy)}</div>
+      <div class="row">🛒 買う：${esc(d.buy)}</div>
+      <div class="row">➡️ 🎁 もらえる：${esc(d.get)}</div>
+      <div class="date">${esc(d.date)}</div>
+    </article>`
+  }).join(""):'<div class="empty">😢 該当するお得情報がありません</div>';
+}
+function toggleFav(id){
+  favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];
+  localStorage.setItem("tokkonFavorites",JSON.stringify(favorites)); render();
+}
+document.querySelectorAll("#storeTabs button").forEach(b=>b.onclick=()=>{
+  store=b.dataset.store; document.querySelectorAll("#storeTabs button").forEach(x=>x.classList.toggle("active",x===b)); render();
+});
+document.querySelectorAll("#chips button").forEach(b=>b.onclick=()=>{
+  cat=b.dataset.cat; document.querySelectorAll("#chips button").forEach(x=>x.classList.toggle("active",x===b)); render();
+});
+document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();query=input.value;render();};
+document.getElementById("clearSearch").onclick=()=>{input.value="";query="";render();input.focus();};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
+  if(b.dataset.nav==="search"){input.focus(); window.scrollTo({top:0,behavior:"smooth"});}
+  if(b.dataset.nav==="favorite"){store="all";cat="all";query="";input.value="";render(); list.innerHTML=DEALS.filter((d,i)=>favorites.includes(i)).map((d)=>{
+    const id=DEALS.indexOf(d); return `<article class="card"><button class="fav on" onclick="toggleFav(${id})">★</button><span class="store ${d.store}">${esc(d.storeName)}</span><div class="title">${esc(d.buy)}</div><div class="row">🛒 買う：${esc(d.buy)}</div><div class="row">➡️ 🎁 もらえる：${esc(d.get)}</div><div class="date">${esc(d.date)}</div></article>`;
+  }).join("")||'<div class="empty">☆ お気に入りはまだありません</div>';}
+  if(b.dataset.nav==="home"){store="all";cat="all";query="";input.value="";render();}
+});
+render();
+</script>
+</body></html>
