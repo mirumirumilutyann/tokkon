@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#172b4d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>得コン v0.8</title>
+<title>得コン v0.9.2</title>
 <style>
 *{box-sizing:border-box} body{margin:0;background:#f3f5f8;color:#182338;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
 header{background:#172b4d;color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:10}
@@ -37,7 +37,7 @@ nav button.active{color:#172b4d}
 </style>
 </head>
 <body>
-<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.8</span></div><div class="sub">コンビニのお得を、もっと手軽に。</div></div></header>
+<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.9.2</span></div><div class="sub">お得なコンビニまとめて調べる。</div></div></header>
 
 <main class="wrap">
   <form class="search" id="searchForm">
@@ -103,12 +103,12 @@ function levenshtein(a,b){
   return prev[n];
 }
 
-const SEARCH_GROUPS = {
+const BROAD_SEARCH_GROUPS = {
   "お茶":["お茶","茶","緑茶","日本茶","ほうじ茶","紅茶","烏龍茶","ウーロン茶","麦茶","ジャスミン茶","抹茶","濃茶","ティー"],
   "炭酸":["炭酸","炭酸飲料","コーラ","サイダー","ソーダ","スパークリング","炭酸水","ジンジャーエール","ファンタ","メロンソーダ"],
   "コーヒー":["コーヒー","珈琲","カフェラテ","カフェオレ","ラテ","エスプレッソ","ブラックコーヒー","ミルクコーヒー"],
   "飲み物":["飲み物","飲料","ドリンク","お茶","炭酸","ジュース","コーヒー","紅茶","水","スポーツドリンク","エナジードリンク"],
-  "ジュース":["ジュース","果汁","フルーツ飲料","オレンジ","りんご","ぶどう","カルピス","乳酸菌飲料"],
+  "ジュース":["ジュース","果汁","フルーツ飲料","オレンジ","りんご","ぶどう","乳酸菌飲料"],
   "水":["水","天然水","ミネラルウォーター","水分補給"],
   "アイス":["アイス","アイスクリーム","ラクトアイス","氷菓","フローズン","ジェラート","ソフトクリーム"],
   "お菓子":["お菓子","菓子","チョコ","チョコレート","ポテトチップス","ポテチ","グミ","クッキー","ビスケット","スナック"],
@@ -125,54 +125,75 @@ const SEARCH_GROUPS = {
   "ファミマ":["ファミマ","ファミリーマート"],
   "ローソン":["ローソン","LAWSON"]
 };
-const SEARCH_ALIASES = Object.fromEntries(
-  Object.entries(SEARCH_GROUPS).flatMap(([key, words]) => words.map(w => [normalizeText(w), words]))
-);
-function expandSearchWords(rawQuery){
-  const base = rawQuery.trim().split(/[\s　]+/).map(normalizeText).filter(Boolean);
-  const expanded = new Set(base);
-  for(const q of base){
-    for(const [key, words] of Object.entries(SEARCH_GROUPS)){
-      const nk = normalizeText(key);
-      const nw = words.map(normalizeText);
-      if(nk === q || nw.includes(q)){
-        nw.forEach(w=>expanded.add(w));
-      }
-    }
+
+// 特定の商品・味などは、広いカテゴリへ勝手に拡張しない。
+// 例：「烏龍茶」は烏龍茶だけ、「カルピス」はカルピスだけを探す。
+const EXACT_ALIASES = {
+  "烏龍茶":["烏龍茶","ウーロン茶","烏龍"],
+  "ウーロン茶":["烏龍茶","ウーロン茶","烏龍"],
+  "緑茶":["緑茶"],
+  "ほうじ茶":["ほうじ茶"],
+  "紅茶":["紅茶","ティー"],
+  "麦茶":["麦茶"],
+  "ジャスミン茶":["ジャスミン茶"],
+  "抹茶":["抹茶"],
+  "カルピス":["カルピス"],
+  "コーラ":["コーラ"],
+  "サイダー":["サイダー"],
+  "ソーダ":["ソーダ"],
+  "ファンタ":["ファンタ"],
+  "ジンジャーエール":["ジンジャーエール"],
+  "コーヒー":["コーヒー","珈琲"],
+  "カフェラテ":["カフェラテ"],
+  "カフェオレ":["カフェオレ"],
+  "天然水":["天然水"],
+  "スポーツドリンク":["スポーツドリンク"],
+  "エナジードリンク":["エナジードリンク"],
+  "りんご":["りんご","林檎"],
+  "オレンジ":["オレンジ"],
+  "ぶどう":["ぶどう","葡萄"]
+};
+
+function getSearchTerms(q){
+  const n=normalizeText(q);
+  if(!n) return [];
+  // 広いカテゴリだけ、関連する語へ展開する
+  for(const [key, words] of Object.entries(BROAD_SEARCH_GROUPS)){
+    if(normalizeText(key)===n) return words.map(normalizeText);
   }
-  return [...expanded];
+  // 特定語は明示した同義語だけ
+  if(EXACT_ALIASES[n]) return EXACT_ALIASES[n].map(normalizeText);
+  // 店舗名などは入力語そのものだけ
+  return [n];
 }
 
 function matchesSmart(text, rawQuery){
   const t=normalizeText(text);
   const raw=rawQuery.trim();
   if(!raw) return true;
-
   const baseWords=raw.split(/[\s　]+/).map(normalizeText).filter(Boolean);
+  if(!baseWords.length) return true;
 
-  // 各検索語を「カテゴリの仲間」まで展開して判定する。
-  // 例：「お茶」→ お茶・緑茶・ほうじ茶・紅茶・烏龍茶・ティー…
-  const groups=baseWords.map(q=>{
-    const related=expandSearchWords(q);
-    return related.some(w=>t.includes(w));
-  });
-  if(groups.every(Boolean)) return true;
+  // 複数語検索は、それぞれの検索語がマッチすることを要求。
+  if(baseWords.every(q=>getSearchTerms(q).some(w=>t.includes(w)))) return true;
 
-  // 元の入力そのものも検索（完全な商品名・店舗名など）
+  // 商品名・店舗名の入力そのものも優先して検索
   const normalizedRaw=normalizeText(raw);
   if(normalizedRaw && t.includes(normalizedRaw)) return true;
 
-  // 軽い入力ミスを許容
-  if(baseWords.length===1 && baseWords[0].length>=3){
+  // 特定語では曖昧検索を行わず、誤ヒットを防ぐ。
+  // 未登録の3文字以上の語だけ、軽い入力ミスを許容。
+  if(baseWords.length===1 && baseWords[0].length>=4 && !EXACT_ALIASES[baseWords[0]]){
     const q=baseWords[0];
-    const chunks=t.match(/[a-z0-9一-龠ぁ-ゖー]{2,}/g)||[];
+    const chunks=t.match(/[a-z0-9一-龠ぁ-ゖー]{3,}/g)||[];
     return chunks.some(c=>{
-      const max=Math.max(1,Math.floor(q.length*0.25));
-      return levenshtein(q,c)<=max || c.includes(q.slice(0,-1));
+      const max=1;
+      return levenshtein(q,c)<=max;
     });
   }
   return false;
 }
+
 function render(){
   const filtered=DEALS.filter(d=>{
     const text=d.storeName+" "+d.buy+" "+d.get+" "+d.date+" "+d.category;
