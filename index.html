@@ -42,7 +42,7 @@ nav button.active{color:#172b4d}
 <main class="wrap">
   <form class="search" id="searchForm">
     <input id="searchInput" type="search" placeholder="商品名・店舗名・内容を検索" autocomplete="off">
-    <button type="submit">検索</button>
+    <button type="submit">検索</button><button type="button" id="clearSearch" style="border:0;border-radius:11px;background:#e9edf3;color:#172b4d;font-weight:800;padding:0 12px">×</button>
   </form>
 
   <div class="tabs" id="storeTabs">
@@ -60,7 +60,7 @@ nav button.active{color:#172b4d}
     <button data-cat="アプリ限定">📱 アプリ限定</button>
   </div>
 
-  <div class="status" id="status"></div>
+  <div class="status" id="status"></div><div id="searchHint" style="font-size:12px;color:#778194;margin:0 2px 10px">例：コーヒー / 無料 / セブン / コーヒー 無料</div>
   <div id="list"></div>
 </main>
 
@@ -77,14 +77,110 @@ let store="all", cat="all", query="", favorites=JSON.parse(localStorage.getItem(
 
 const list=document.getElementById("list"), status=document.getElementById("status"), input=document.getElementById("searchInput");
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function normalizeText(s){
+  return String(s)
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[ァ-ン]/g, ch=>String.fromCharCode(ch.charCodeAt(0)-0x60))
+    .replace(/[ぁ-ゖ]/g, ch=>ch)
+    .replace(/とうきょう/g,"東京")
+    .replace(/せぶんいれぶん|せぶん/g,"セブン")
+    .replace(/ふぁみりーまーと|ふぁみま/g,"ファミマ")
+    .replace(/ろーそん/g,"ローソン")
+    .replace(/[^a-z0-9一-龠ぁ-ゖー]+/g,"");
+}
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  if(!m) return n; if(!n) return m;
+  let prev=Array(n+1).fill(0).map((_,i)=>i);
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    prev=cur;
+  }
+  return prev[n];
+}
+
+const SEARCH_GROUPS = {
+  "お茶":["お茶","茶","緑茶","日本茶","ほうじ茶","紅茶","烏龍茶","ウーロン茶","麦茶","ジャスミン茶","抹茶","濃茶","ティー"],
+  "炭酸":["炭酸","炭酸飲料","コーラ","サイダー","ソーダ","スパークリング","炭酸水","ジンジャーエール","ファンタ","メロンソーダ"],
+  "コーヒー":["コーヒー","珈琲","カフェラテ","カフェオレ","ラテ","エスプレッソ","ブラックコーヒー","ミルクコーヒー"],
+  "飲み物":["飲み物","飲料","ドリンク","お茶","炭酸","ジュース","コーヒー","紅茶","水","スポーツドリンク","エナジードリンク"],
+  "ジュース":["ジュース","果汁","フルーツ飲料","オレンジ","りんご","ぶどう","カルピス","乳酸菌飲料"],
+  "水":["水","天然水","ミネラルウォーター","水分補給"],
+  "アイス":["アイス","アイスクリーム","ラクトアイス","氷菓","フローズン","ジェラート","ソフトクリーム"],
+  "お菓子":["お菓子","菓子","チョコ","チョコレート","ポテトチップス","ポテチ","グミ","クッキー","ビスケット","スナック"],
+  "ラーメン":["ラーメン","カップ麺","カップラーメン","袋麺","インスタント麺","麺","焼きそば","うどん","そば"],
+  "パン":["パン","ベーカリー","菓子パン","惣菜パン","サンドイッチ","ロールパン"],
+  "おにぎり":["おにぎり","おむすび","おむすび類"],
+  "弁当":["弁当","お弁当","丼","丼ぶり","惣菜"],
+  "スイーツ":["スイーツ","デザート","ケーキ","プリン","ゼリー","シュークリーム","洋菓子","和菓子"],
+  "飲料":["飲料","飲み物","ドリンク","お茶","炭酸","ジュース","コーヒー","水"],
+  "無料":["無料","もらえる","1個もらえる","一個もらえる","プレゼント","おまけ","プライチ"],
+  "割引":["割引","値引き","安い","お得","値下げ","OFF","円引き","半額"],
+  "クーポン":["クーポン","券","値引券","アプリクーポン"],
+  "セブン":["セブン","セブンイレブン","7-11"],
+  "ファミマ":["ファミマ","ファミリーマート"],
+  "ローソン":["ローソン","LAWSON"]
+};
+const SEARCH_ALIASES = Object.fromEntries(
+  Object.entries(SEARCH_GROUPS).flatMap(([key, words]) => words.map(w => [normalizeText(w), words]))
+);
+function expandSearchWords(rawQuery){
+  const base = rawQuery.trim().split(/[\s　]+/).map(normalizeText).filter(Boolean);
+  const expanded = new Set(base);
+  for(const q of base){
+    for(const [key, words] of Object.entries(SEARCH_GROUPS)){
+      const nk = normalizeText(key);
+      const nw = words.map(normalizeText);
+      if(nk === q || nw.includes(q)){
+        nw.forEach(w=>expanded.add(w));
+      }
+    }
+  }
+  return [...expanded];
+}
+
+function matchesSmart(text, rawQuery){
+  const t=normalizeText(text);
+  const raw=rawQuery.trim();
+  if(!raw) return true;
+
+  const baseWords=raw.split(/[\s　]+/).map(normalizeText).filter(Boolean);
+
+  // 各検索語を「カテゴリの仲間」まで展開して判定する。
+  // 例：「お茶」→ お茶・緑茶・ほうじ茶・紅茶・烏龍茶・ティー…
+  const groups=baseWords.map(q=>{
+    const related=expandSearchWords(q);
+    return related.some(w=>t.includes(w));
+  });
+  if(groups.every(Boolean)) return true;
+
+  // 元の入力そのものも検索（完全な商品名・店舗名など）
+  const normalizedRaw=normalizeText(raw);
+  if(normalizedRaw && t.includes(normalizedRaw)) return true;
+
+  // 軽い入力ミスを許容
+  if(baseWords.length===1 && baseWords[0].length>=3){
+    const q=baseWords[0];
+    const chunks=t.match(/[a-z0-9一-龠ぁ-ゖー]{2,}/g)||[];
+    return chunks.some(c=>{
+      const max=Math.max(1,Math.floor(q.length*0.25));
+      return levenshtein(q,c)<=max || c.includes(q.slice(0,-1));
+    });
+  }
+  return false;
+}
 function render(){
-  const q=query.trim().toLowerCase();
-  const filtered=DEALS.filter(d=>
-    (store==="all"||d.store===store)&&
-    (cat==="all"||d.category===cat)&&
-    (!q||(d.storeName+" "+d.buy+" "+d.get+" "+d.date+" "+d.category).toLowerCase().includes(q))
-  );
-  status.textContent=q?`「${query}」の検索結果：${filtered.length}件`:`今日のお得：${filtered.length}件`;
+  const filtered=DEALS.filter(d=>{
+    const text=d.storeName+" "+d.buy+" "+d.get+" "+d.date+" "+d.category;
+    return (store==="all"||d.store===store)&&
+      (cat==="all"||d.category===cat)&&
+      (!query.trim()||matchesSmart(text,query));
+  });
+  status.textContent=query.trim()?`「${query}」の検索結果：${filtered.length}件`:`今日のお得：${filtered.length}件`;
   list.innerHTML=filtered.length?filtered.map((d,i)=>{
     const id=DEALS.indexOf(d), on=favorites.includes(id);
     return `<article class="card">
@@ -108,6 +204,7 @@ document.querySelectorAll("#chips button").forEach(b=>b.onclick=()=>{
   cat=b.dataset.cat; document.querySelectorAll("#chips button").forEach(x=>x.classList.toggle("active",x===b)); render();
 });
 document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();query=input.value;render();};
+document.getElementById("clearSearch").onclick=()=>{input.value="";query="";render();input.focus();};
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
   if(b.dataset.nav==="search"){input.focus(); window.scrollTo({top:0,behavior:"smooth"});}
