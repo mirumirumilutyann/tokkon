@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#172b4d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>得コン v0.9.6</title>
+<title>得コン v0.9.8</title>
 <style>
 *{box-sizing:border-box} body{margin:0;background:#f3f5f8;color:#182338;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
 header{background:#172b4d;color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:10}
@@ -35,10 +35,11 @@ header{background:#172b4d;color:#fff;padding:18px 16px 16px;position:sticky;top:
 nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid #e5e8ed;padding:8px max(10px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:20}
 nav button{border:0;background:transparent;font-size:16.5px;font-weight:800;color:#6d7685;padding:8px 10px;min-height:48px;white-space:nowrap;flex:1;text-align:center;line-height:1}
 nav button.active{color:#172b4d}
+.favCount{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;margin-left:3px;border-radius:999px;background:#172b4d;color:#fff;font-size:11px;vertical-align:middle}
 </style>
 </head>
 <body>
-<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.9.6</span></div><div class="sub">お得なコンビニまとめて調べる。</div></div></header>
+<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.9.8</span></div><div class="sub">お得なコンビニまとめて調べる。</div></div></header>
 
 <main class="wrap">
   <form class="search" id="searchForm">
@@ -69,7 +70,7 @@ nav button.active{color:#172b4d}
   <button data-nav="home" class="active">⌂ ホーム</button>
   <button data-nav="list">☰ 一覧</button>
   <button data-nav="search">🔎 検索</button>
-  <button data-nav="favorite">♡ お気に入り</button>
+  <button data-nav="favorite">♡ お気に入り <span id="favCount" class="favCount">0</span></button>
 </nav>
 
 <script>
@@ -214,29 +215,55 @@ function dateLabel(d){
   if(left>0 && left<=3) return `🔥 あと${left}日`;
   return d.date||'';
 }
+function dealAction(d){
+  const c=d.category||"";
+  if(c.includes("値引") || c.includes("割引")) return `💰 ${d.get}`;
+  if(c.includes("クーポン")) return `🎫 ${d.get}`;
+  if(c.includes("アプリ")) return `📱 ${d.get}`;
+  return `🎁 ${d.get}`;
+}
+function renderCards(items){
+  list.innerHTML=items.length?items.map(d=>{
+    const id=DEALS.indexOf(d), on=favorites.includes(id);
+    return `<article class="card">
+      <button class="fav ${on?"on":""}" onclick="toggleFav(${id})" aria-label="お気に入り">♡</button>
+      <span class="store ${d.store}">${esc(d.storeName)}</span>
+      <div class="title">${esc(d.buy)}</div>
+      <div class="row">🛒 買う：${esc(d.buy)}</div>
+      <div class="row">${esc(dealAction(d))}</div>
+      <div class="date">${esc(dateLabel(d))}${d.redeemEnd?`　引換：${esc(d.date.split('引換：')[1]||'')}`:''}</div>
+    </article>`;
+  }).join(''):'<div class="empty">♡ お気に入りはまだありません</div>';
+}
+function updateFavCount(){
+  const count=DEALS.filter((d,i)=>favorites.includes(i)&&isActive(d)).length;
+  document.getElementById('favCount').textContent=count;
+}
 function render(){
   const filtered=DEALS.filter(d=>{
     const text=d.storeName+" "+d.buy+" "+d.get+" "+d.date+" "+d.category;
     return isActive(d) && (store==="all"||d.store===store) &&
-      (cat==="all"||d.category===cat) &&
+      (cat==="all"||d.category===cat || (cat==="値引き・割引" && (d.category==="値引き"||d.category==="値引き・割引"))) &&
       (!query.trim()||matchesSmart(text,query));
   });
   status.textContent=query.trim()?`「${query}」の検索結果：${filtered.length}件`:`今日のお得：${filtered.length}件`;
-  list.innerHTML=filtered.length?filtered.map((d,i)=>{
-    const id=DEALS.indexOf(d), on=favorites.includes(id);
-    return `<article class="card">
-      <button class="fav ${on?"on":""}" onclick="toggleFav(${id})" aria-label="お気に入り">${on?"★":"☆"}</button>
-      <span class="store ${d.store}">${esc(d.storeName)}</span>
-      <div class="title">${esc(d.buy)}</div>
-      <div class="row">🛒 買う：${esc(d.buy)}</div>
-      <div class="row">🎁 もらえる：${esc(d.get)}</div>
-      <div class="date">${esc(dateLabel(d))}${d.redeemEnd?`　引換：${esc(d.date.split('引換：')[1]||'')}`:''}</div>
-    </article>`
-  }).join(''):'<div class="empty">😢 該当するお得情報がありません</div>';
+  renderCards(filtered);
+  updateFavCount();
+}
+function renderFavorites(){
+  store="all"; cat="all"; query=""; input.value="";
+  document.querySelectorAll("#storeTabs button").forEach(x=>x.classList.toggle("active",x.dataset.store==="all"));
+  document.querySelectorAll("#chips button").forEach(x=>x.classList.toggle("active",x.dataset.cat==="all"));
+  const items=DEALS.filter((d,i)=>favorites.includes(i)&&isActive(d));
+  status.textContent=`お気に入り：${items.length}件`;
+  renderCards(items);
+  updateFavCount();
 }
 function toggleFav(id){
   favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];
-  localStorage.setItem("tokkonFavorites",JSON.stringify(favorites)); render();
+  localStorage.setItem("tokkonFavorites",JSON.stringify(favorites));
+  if(document.querySelector('nav button.active')?.dataset.nav==="favorite") renderFavorites();
+  else render();
 }
 document.querySelectorAll("#storeTabs button").forEach(b=>b.onclick=()=>{
   store=b.dataset.store; document.querySelectorAll("#storeTabs button").forEach(x=>x.classList.toggle("active",x===b)); render();
@@ -248,11 +275,9 @@ document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();query=inpu
 document.getElementById("clearSearch").onclick=()=>{input.value="";query="";render();input.focus();};
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
-  if(b.dataset.nav==="search"){input.focus(); window.scrollTo({top:0,behavior:"smooth"});}
-  if(b.dataset.nav==="favorite"){store="all";cat="all";query="";input.value="";render(); list.innerHTML=DEALS.filter((d,i)=>favorites.includes(i)).map((d)=>{
-    const id=DEALS.indexOf(d); return `<article class="card"><button class="fav on" onclick="toggleFav(${id})">★</button><span class="store ${d.store}">${esc(d.storeName)}</span><div class="title">${esc(d.buy)}</div><div class="row">🛒 買う：${esc(d.buy)}</div><div class="row">🎁 もらえる：${esc(d.get)}</div><div class="date">${esc(d.date)}</div></article>`;
-  }).join("")||'<div class="empty">☆ お気に入りはまだありません</div>';}
-  if(b.dataset.nav==="home"){store="all";cat="all";query="";input.value="";render();}
+  if(b.dataset.nav==="search"){input.focus(); window.scrollTo({top:0,behavior:"smooth"}); render();}
+  if(b.dataset.nav==="favorite") renderFavorites();
+  if(b.dataset.nav==="home" || b.dataset.nav==="list"){store="all";cat="all";query="";input.value="";render();}
 });
 render();
 </script>
