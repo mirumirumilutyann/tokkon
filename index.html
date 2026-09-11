@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#172b4d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>得コン v0.9.5</title>
+<title>得コン v0.9.6</title>
 <style>
 *{box-sizing:border-box} body{margin:0;background:#f3f5f8;color:#182338;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
 header{background:#172b4d;color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:10}
@@ -38,7 +38,7 @@ nav button.active{color:#172b4d}
 </style>
 </head>
 <body>
-<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.9.5</span></div><div class="sub">お得なコンビニまとめて調べる。</div></div></header>
+<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.9.6</span></div><div class="sub">お得なコンビニまとめて調べる。</div></div></header>
 
 <main class="wrap">
   <form class="search" id="searchForm">
@@ -73,7 +73,7 @@ nav button.active{color:#172b4d}
 </nav>
 
 <script>
-const DEALS=[{"store": "seven", "storeName": "セブンイレブン", "buy": "Gong cha 黒糖烏龍ミルクティーなど", "get": "午後の紅茶 おいしい無糖など", "date": "購入：9/8〜9/14　引換：9/15〜9/28", "category": "無料でもらえる"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "まるしぼりりんご＆カルピス 470ml", "get": "ぐんぐんグルトα 快眠・快腸ケア 500ml", "date": "購入：9/8〜9/14", "category": "無料でもらえる"}, {"store": "family", "storeName": "ファミリーマート", "buy": "伊右衛門 濃い緑茶・濃いほうじ茶", "get": "サントリー天然水 1L", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる"}, {"store": "family", "storeName": "ファミリーマート", "buy": "アイスの実 濃密りんご", "get": "対象商品", "date": "9/8〜9/14", "category": "アプリ限定"}, {"store": "lawson", "storeName": "ローソン", "buy": "辛ラーメン トゥーンバカップ／焼きそばカップ／バケツカップ", "get": "辛ラーメン ミニカップ", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる"}, {"store": "lawson", "storeName": "ローソン", "buy": "明治 エッセル スーパーカップ クッキーバニラ 200ml", "get": "明治 ブルガリア フローズンヨーグルト デザート 85ml", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる"}];
+const DEALS=[{"store": "seven", "storeName": "セブンイレブン", "buy": "Gong cha 黒糖烏龍ミルクティーなど", "get": "午後の紅茶 おいしい無糖など", "date": "購入：9/8〜9/14　引換：9/15〜9/28", "category": "無料でもらえる", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-28"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "まるしぼりりんご＆カルピス 470ml", "get": "ぐんぐんグルトα 快眠・快腸ケア 500ml", "date": "購入：9/8〜9/14", "category": "無料でもらえる", "start": "2026-09-08", "end": "2026-09-14"}, {"store": "family", "storeName": "ファミリーマート", "buy": "伊右衛門 濃い緑茶・濃いほうじ茶", "get": "サントリー天然水 1L", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-21"}, {"store": "family", "storeName": "ファミリーマート", "buy": "アイスの実 濃密りんご", "get": "対象商品", "date": "購入：9/8〜9/14", "category": "アプリ限定", "start": "2026-09-08", "end": "2026-09-14"}, {"store": "lawson", "storeName": "ローソン", "buy": "辛ラーメン トゥーンバカップ／焼きそばカップ／バケツカップ", "get": "辛ラーメン ミニカップ", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-21"}, {"store": "lawson", "storeName": "ローソン", "buy": "明治 エッセル スーパーカップ クッキーバニラ 200ml", "get": "明治 ブルガリア フローズンヨーグルト デザート 85ml", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "無料でもらえる", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-21"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "バンダイ 魚ギョッと 釣りグミ", "get": "キャラパキ発掘恐竜 1個", "date": "購入：9/11〜9/17　引換：9/18〜10/1", "category": "無料でもらえる", "start": "2026-09-11", "end": "2026-09-17", "redeemEnd": "2026-10-01"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "マルちゃん正麺 醤油味", "get": "マルちゃん正麺 醤油味 1個", "date": "購入：9/10〜9/16　引換：9/17〜9/30", "category": "無料でもらえる", "start": "2026-09-10", "end": "2026-09-16", "redeemEnd": "2026-09-30"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "日清 カップヌードル 感謝の謎肉増量／カレー／シーフード／チリトマト", "get": "対象のカップヌードル ミニ等 1個", "date": "購入：9/10〜9/16　引換：9/17〜9/30", "category": "無料でもらえる", "start": "2026-09-10", "end": "2026-09-16", "redeemEnd": "2026-09-30"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "リポビタンD11／リポビタンDプレミアム", "get": "リポビタンD 100ml", "date": "購入：9/10〜9/16　引換：9/17〜9/30", "category": "無料でもらえる", "start": "2026-09-10", "end": "2026-09-16", "redeemEnd": "2026-09-30"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "ブラックサンダー", "get": "至福のブラックサンダー フランス発酵バター", "date": "購入：9/10〜9/16　引換：9/17〜9/30", "category": "無料でもらえる", "start": "2026-09-10", "end": "2026-09-16", "redeemEnd": "2026-09-30"}, {"store": "seven", "storeName": "セブンイレブン", "buy": "対象のおにぎり・寿司 2個", "get": "50円引き", "date": "9/9〜9/13　4個なら100円引き", "category": "値引き", "start": "2026-09-09", "end": "2026-09-13"}, {"store": "family", "storeName": "ファミリーマート", "buy": "ファミマルスイーツ 1個", "get": "次回使える50円引きクーポン", "date": "購入：9/8〜9/21　クーポン利用：9/8〜9/28", "category": "クーポン", "start": "2026-09-08", "end": "2026-09-21", "redeemEnd": "2026-09-28"}, {"store": "family", "storeName": "ファミリーマート", "buy": "アイスの実 濃密りんご", "get": "アイスの実 ぶどうマスカット", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "アプリ限定", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-21"}, {"store": "family", "storeName": "ファミリーマート", "buy": "カジッテ グレープ＆マスカット", "get": "カジッテマニア 完熟ゴールデンパイン", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "アプリ限定", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-21"}, {"store": "family", "storeName": "ファミリーマート", "buy": "グレープサイダー 500ml", "get": "ペプシコーラ 600ml", "date": "購入：9/8〜9/14　引換：9/15〜9/21", "category": "アプリ限定", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-21"}, {"store": "lawson", "storeName": "ローソン", "buy": "午後の紅茶 アイスミルクティー デ モーニング／おいしい無糖 香るレモン", "get": "午後の紅茶 FRUITS＆ICE TEA 白ぶどうとレモン", "date": "購入：9/8〜9/14　引換：9/15〜9/28", "category": "無料でもらえる", "start": "2026-09-08", "end": "2026-09-14", "redeemEnd": "2026-09-28"}, {"store": "lawson", "storeName": "ローソン", "buy": "カカオの恵み 砂糖ゼロ・糖類ゼロ70% シェアパック 84g", "get": "プレミアムガーナ各種 50円引券", "date": "9/8〜9/21", "category": "クーポン", "start": "2026-09-08", "end": "2026-09-21"}, {"store": "lawson", "storeName": "ローソン", "buy": "ベーカリー＋マチカフェドリンク", "get": "30円引き", "date": "9/8〜9/21　毎朝5:00〜10:59", "category": "値引き", "start": "2026-09-08", "end": "2026-09-21"}, {"store": "lawson", "storeName": "ローソン", "buy": "伊藤園 1日分の野菜／栄養強化型／ビタミン野菜／朝活野菜 2本", "get": "50円引き（3本なら100円引き）", "date": "対象商品2本で50円引き、3本で100円引き", "category": "値引き", "start": "2026-09-08", "end": "2026-09-21"}];
 let store="all", cat="all", query="", favorites=JSON.parse(localStorage.getItem("tokkonFavorites")||"[]");
 
 const list=document.getElementById("list"), status=document.getElementById("status"), input=document.getElementById("searchInput");
@@ -195,11 +195,30 @@ function matchesSmart(text, rawQuery){
   return false;
 }
 
+function todayLocal(){
+  const d=new Date();
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+function daysUntil(iso){
+  if(!iso) return null;
+  const [y,m,d]=iso.split("-").map(Number);
+  const target=new Date(y,m-1,d);
+  return Math.round((target-todayLocal())/86400000);
+}
+function isActive(d){
+  return !d.end || daysUntil(d.end)>=0;
+}
+function dateLabel(d){
+  const left=daysUntil(d.end);
+  if(left===0) return '🔥 本日終了';
+  if(left>0 && left<=3) return `🔥 あと${left}日`;
+  return d.date||'';
+}
 function render(){
   const filtered=DEALS.filter(d=>{
     const text=d.storeName+" "+d.buy+" "+d.get+" "+d.date+" "+d.category;
-    return (store==="all"||d.store===store)&&
-      (cat==="all"||d.category===cat)&&
+    return isActive(d) && (store==="all"||d.store===store) &&
+      (cat==="all"||d.category===cat) &&
       (!query.trim()||matchesSmart(text,query));
   });
   status.textContent=query.trim()?`「${query}」の検索結果：${filtered.length}件`:`今日のお得：${filtered.length}件`;
@@ -211,9 +230,9 @@ function render(){
       <div class="title">${esc(d.buy)}</div>
       <div class="row">🛒 買う：${esc(d.buy)}</div>
       <div class="row">🎁 もらえる：${esc(d.get)}</div>
-      <div class="date">${esc(d.date)}</div>
+      <div class="date">${esc(dateLabel(d))}${d.redeemEnd?`　引換：${esc(d.date.split('引換：')[1]||'')}`:''}</div>
     </article>`
-  }).join(""):'<div class="empty">😢 該当するお得情報がありません</div>';
+  }).join(''):'<div class="empty">😢 該当するお得情報がありません</div>';
 }
 function toggleFav(id){
   favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];
