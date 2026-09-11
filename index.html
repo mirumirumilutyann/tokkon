@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#172b4d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>得コン v0.9.4</title>
+<title>得コン v0.9.5</title>
 <style>
 *{box-sizing:border-box} body{margin:0;background:#f3f5f8;color:#182338;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
 header{background:#172b4d;color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:10}
@@ -38,11 +38,11 @@ nav button.active{color:#172b4d}
 </style>
 </head>
 <body>
-<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.9.4</span></div><div class="sub">お得なコンビニまとめて調べる。</div></div></header>
+<header><div class="wrap" style="padding:0"><div class="logo">🏪 得コン <span style="font-size:12px;opacity:.75">v0.9.5</span></div><div class="sub">お得なコンビニまとめて調べる。</div></div></header>
 
 <main class="wrap">
   <form class="search" id="searchForm">
-    <input id="searchInput" type="search" placeholder="商品名・店舗名・内容を検索" autocomplete="off">
+    <input id="searchInput" type="search" placeholder="商品名を検索" autocomplete="off">
     <button type="submit">検索</button><button type="button" id="clearSearch" style="border:0;border-radius:11px;background:#e9edf3;color:#172b4d;font-weight:800;padding:0 12px">×</button>
   </form>
 
@@ -61,7 +61,7 @@ nav button.active{color:#172b4d}
     <button data-cat="アプリ限定">📱 アプリ限定</button>
   </div>
 
-  <div class="status" id="status"></div><div id="searchHint" style="font-size:12px;color:#778194;margin:0 2px 10px">例：コーヒー / 無料 / セブン / コーヒー 無料</div>
+  <div class="status" id="status"></div>
   <div id="list"></div>
 </main>
 
@@ -210,7 +210,7 @@ function render(){
       <span class="store ${d.store}">${esc(d.storeName)}</span>
       <div class="title">${esc(d.buy)}</div>
       <div class="row">🛒 買う：${esc(d.buy)}</div>
-      <div class="row">➡️ 🎁 もらえる：${esc(d.get)}</div>
+      <div class="row">🎁 もらえる：${esc(d.get)}</div>
       <div class="date">${esc(d.date)}</div>
     </article>`
   }).join(""):'<div class="empty">😢 該当するお得情報がありません</div>';
@@ -231,7 +231,7 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
   if(b.dataset.nav==="search"){input.focus(); window.scrollTo({top:0,behavior:"smooth"});}
   if(b.dataset.nav==="favorite"){store="all";cat="all";query="";input.value="";render(); list.innerHTML=DEALS.filter((d,i)=>favorites.includes(i)).map((d)=>{
-    const id=DEALS.indexOf(d); return `<article class="card"><button class="fav on" onclick="toggleFav(${id})">★</button><span class="store ${d.store}">${esc(d.storeName)}</span><div class="title">${esc(d.buy)}</div><div class="row">🛒 買う：${esc(d.buy)}</div><div class="row">➡️ 🎁 もらえる：${esc(d.get)}</div><div class="date">${esc(d.date)}</div></article>`;
+    const id=DEALS.indexOf(d); return `<article class="card"><button class="fav on" onclick="toggleFav(${id})">★</button><span class="store ${d.store}">${esc(d.storeName)}</span><div class="title">${esc(d.buy)}</div><div class="row">🛒 買う：${esc(d.buy)}</div><div class="row">🎁 もらえる：${esc(d.get)}</div><div class="date">${esc(d.date)}</div></article>`;
   }).join("")||'<div class="empty">☆ お気に入りはまだありません</div>';}
   if(b.dataset.nav==="home"){store="all";cat="all";query="";input.value="";render();}
 });
